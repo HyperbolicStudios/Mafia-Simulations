@@ -240,5 +240,5 @@ def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,tota
     #printHistogram(25,results)
 
 #results = run_batch(13,1,1,2,0)
-results = run_batch(30,3,4,5,0,1)
+results = run_batch(total_players = 17,total_doctors=3,total_vigs = 2,total_mafia = 3,total_cult = 1,total_cult = 1)
 #playGame(3,0,0,0,0,1)
