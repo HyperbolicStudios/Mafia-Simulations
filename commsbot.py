@@ -10,7 +10,7 @@ from keep_alive import keep_alive
 import os
 
 import random
-TOKEN = "ODc2OTgxMTg0MTEzMDQ5NjEx.YRr-Xw.AolNiaDTl5jQM4tdmqPi8GKG_G0"
+TOKEN = "token goes here"
 
 helpPage = ""
 keep_alive()
