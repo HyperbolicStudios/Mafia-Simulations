@@ -14,7 +14,7 @@ class player_object(): #player object
         self.role = role
         self.healed = False
         self.bp_status = bp_status
-        self.shots = 3 #used for vig roles
+        self.shots = 100 #used for vig roles
 class result_object(): #result object, used to store statistics about each simulated game
     def __init__(self,winner,length):
         self.winner = winner
@@ -154,16 +154,16 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                 target = sample(candidates,1)[0]
                 for player_j in playerlist:
                     if target.id == player_j.id:
-                        player_j.bp_status = True
-                        print("Player {} bp is set to {} tonight.".format(player_j.id,player_j.bp_status))
+                        player_j.healed = True
+                        print("Player {} healed is set to {} tonight.".format(player_j.id,player_j.healed))
 
 #mafia select who to kill
         if getPlayersByAlignment(playerlist,"mafia") != []:
             target = sample(getPlayersByNotAlignment(playerlist,"mafia"),1)[0] #select a random townie
-            if target.bp_status != True:
+            if target.bp_status != True and target.healed != True:
                 playerlist.remove(player)
                 print("Player {} was killed by the mafia.".format(player.id))
-            if target.bp_status == True:
+            if target.bp_status == True or target.healed == True:
                 print("Mafia kill BLOCKED.")
 
 #vig kill(s)
@@ -176,7 +176,7 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                         candidates.append(candidate)
                 target = sample(candidates,1)[0]
                 #kill target if not bp
-                if target.bp_status == False:
+                if target.bp_status == False and target.healed == False:
                     playerlist.remove(target)
                     print("Player {} was killed by a vig.".format(player.id))
                 else:
@@ -190,7 +190,7 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                         candidates.append(candidate)
                 target = sample(candidates,1)[0]
             #kill target
-                if target.bp_status == False:
+                if target.bp_status == False and target.healed == False:
                     playerlist.remove(target)
                     print("Player {} was killed by an sk.".format(player.id))
                 else:
@@ -207,12 +207,12 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                     print("Player {} was recruited.".format(target.id))
         #reset all bp to False
         for player in playerlist:
-            player.bp_status = False
+            player.healed = False
 
 def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,total_sk): #run a batch of games under identical conditions, and print the statistics
     alignments = []
     results = []
-    for i in range(1,2001):
+    for i in range(1,5001):
         if(i%1000 == 0):
             print("Game {}...".format(i))
         blockPrint()
@@ -232,13 +232,24 @@ def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,tota
             if alignment == result.winner:
                 count +=1
         print("{}: {}".format(alignment,count/len(results)))
+        if alignment == "mafia win":
+            m_win_perc = count/len(results)
     s = 0
     for result in results:
         s = s+result.length
     print("Average game length: {} cycles".format(s/len(results)))
-    return(results)
+    return(m_win_perc)
     #printHistogram(25,results)
 
-#results = run_batch(13,1,1,2,0)
-results = run_batch(total_players = 17,total_doctors=3,total_vigs = 2,total_mafia = 3,total_cult = 1,total_cult = 1)
-#playGame(3,0,0,0,0,1)
+xvals = []
+yvals = []
+for i in range(1,15):
+    xvals.append(i)
+    yvals.append(run_batch(total_players = 17,total_doctors=0,total_vigs = i,total_mafia = 3,total_cult = 0,total_sk=0))
+import matplotlib.pyplot as plt
+
+plt.plot(xvals,yvals)
+plt.title('17 player game, 3 mafia, all vigs are town')
+plt.xlabel('Number of Vigs')
+plt.ylabel('Mafia win percentage')
+plt.show()
