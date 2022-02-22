@@ -151,6 +151,7 @@ async def on_message(message):
         print(role_name)
 
         await message.author.add_roles(getRoleByName(message.channel.guild,role_name))
+        await message.author.add_roles(getRoleByName(message.channel.guild,"Verified"))
         await message.channel.purge()
         await server_management_channel.send("<@&{}> Notification: Added user **{}** to role **{}**.".format(getRoleByName(message.channel.guild,"Mod").id,message.author,role_name))
 
