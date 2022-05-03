@@ -240,8 +240,8 @@ def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,tota
     print("Average game length: {} cycles".format(s/len(results)))
     return(m_win_perc)
     #printHistogram(25,results)
-
-xvals = []
+run_batch(8,0,0,2,0,0)
+"""xvals = []
 yvals = []
 for i in range(1,15):
     xvals.append(i)
@@ -252,4 +252,4 @@ plt.plot(xvals,yvals)
 plt.title('17 player game, 3 mafia, all vigs are town')
 plt.xlabel('Number of Vigs')
 plt.ylabel('Mafia win percentage')
-plt.show()
+plt.show()"""

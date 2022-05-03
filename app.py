@@ -10,10 +10,10 @@ from keep_alive import keep_alive
 import os
 
 import random
-TOKEN = "token goes here"
+TOKEN = "TOKEN GOES HERE"
 
 helpPage = ""
-keep_alive()
+#keep_alive()
 client = discord.Client()
 
 async def updateStatus(status):
@@ -43,10 +43,10 @@ async def checkForData():
         await asyncio.sleep(2)
 
 def getChannelByName(guilds,name):
-    for guild in guilds:
-        for channel in guild.channels:
-            if(channel.name) == name:
-                return channel
+  for guild in guilds:
+    for channel in guild.channels:
+        if(channel.name) == name:
+            return channel
 
 def getRoleByName(guild,name):
   for role in guild.roles:
@@ -69,6 +69,7 @@ async def on_ready():
     print(client.user.id)
 
     # LIST_OF_CHANNELS = []
+    global guilds
     guilds = client.guilds
     global verify_channel
     global server_management_channel
@@ -144,7 +145,7 @@ async def on_message(message):
           await embed_text(message.channel,text)
 
     #VERIFICATION CHANNEL - OPEN TO USERS
-    if message.content.find("$verify ") == 0:
+    if message.content.find("$verify ") == 0 and message.channel.name =="verify":
     #  try:
         code = message.content[7:].strip()
         role_name = db["codes"][code]
@@ -157,6 +158,17 @@ async def on_message(message):
 
       #except:
        # await message.channel.send("Could not find role with code '{}'.".format(code))
+
+#ANONYMOUS MASON CHAT
+    mason_channels = {"A":["p1","p2","p3"],"B":["p4","p5","p6"]}
+    if message.content[:2] == "-m":
+        print("msg received")
+        channel = message.channel.name
+        for category in mason_channels.keys():
+          if channel in mason_channels[category]:
+              for other_channel in mason_channels[category]:
+                  if other_channel != channel:
+                      await getChannelByName(guilds,other_channel).send(message.content[2:])
 
 
 client.loop.create_task(checkForData())
