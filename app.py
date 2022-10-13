@@ -9,7 +9,7 @@ from keep_alive import keep_alive
 import os
 
 import random
-TOKEN = "ODc2OTgxMTg0MTEzMDQ5NjEx.YRr-Xw.UV25XjbbIUrs4FofueSOE2cUBS0"
+TOKEN = os.environ.get("discord-CommsBot")
 
 helpPage = ""
 #keep_alive()
