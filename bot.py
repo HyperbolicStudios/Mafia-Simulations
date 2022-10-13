@@ -4,7 +4,7 @@ import math
 from discord.ext import tasks, commands
 import datetime
 import traceback
-from keep_alive import keep_alive
+
 #OS/Directory
 import os
 
@@ -63,7 +63,7 @@ def senderNotMod(message):
 
 @client.event
 async def on_ready():
-    keep_alive()
+
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
