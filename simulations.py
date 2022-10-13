@@ -8,12 +8,12 @@ from random import sample
 random.seed
 
 class player_object(): #player object
-    def __init__(self,id,alignment,role,bp_status):
+    def __init__(self,id,alignment,role,bp=0):
         self.id = id
         self.alignment = alignment
         self.role = role
         self.healed = False
-        self.bp_status = bp_status
+        self.bp = bp
         self.shots = 100 #used for vig roles
 class result_object(): #result object, used to store statistics about each simulated game
     def __init__(self,winner,length):
@@ -87,10 +87,10 @@ def evaluate_victory(playerlist):
             number_of_cult += 1
         if player.role == "sk":
             number_of_sk += 1
+    if number_of_mafia >= number_of_players/2:
+        return("mafia win")
     if number_of_sk == 1 and number_of_players == 1:
         return("sk win")
-    if number_of_mafia > number_of_players/2:
-        return("mafia win")
     if number_of_cult > number_of_players/2 and number_of_mafia == 0:
         return("cult win")
     if number_of_town == number_of_players:
@@ -103,22 +103,22 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
     playerlist = []
     #role assignment
     for id in range(1,total_mafia+1): #generates scum
-        playerlist.append(player_object(id,"mafia","goon",False))
+        playerlist.append(player_object(id,"mafia","goon"))
 #note: a cute thing about the range function is that range(n,n) doesn't contain anything, and range (n,n+1) only contains 1 number (n), so if (for ex.) total_doctors = 0, no doctors will be generated
     for id in range(total_mafia+1,total_mafia+total_doctors+1): #generates doctor(s)
-        playerlist.append(player_object(id,"town","doctor",False))
+        playerlist.append(player_object(id,"town","doctor"))
 
     for id in range(total_mafia+total_doctors+1,total_mafia+total_doctors+total_vigs+1): #generates vigs
-        playerlist.append(player_object(id,"town","vig",False))
+        playerlist.append(player_object(id,"town","vig"))
 
     for id in range(total_mafia+total_doctors+total_vigs+1,total_mafia+total_doctors+total_vigs+total_cult+1): #generates cult leader
-        playerlist.append(player_object(id,"cult","cult leader",False))
+        playerlist.append(player_object(id,"cult","cult leader"))
 
     for id in range(total_mafia+total_doctors+total_vigs+total_cult+1,total_mafia+total_doctors+total_vigs+total_cult+total_sk+1): #generate SK
-        playerlist.append(player_object(id,"neutral","sk",False))
+        playerlist.append(player_object(id,"neutral","sk",bp=0)) #bp set to 0 for now, can be adjusted
 
     for id in range(total_mafia+total_doctors+total_vigs+total_cult+total_sk+1,total_players+1): #generates VTs
-        playerlist.append(player_object(id,"town","vt",False))
+        playerlist.append(player_object(id,"town","vt"))
 
     print_rolelist(playerlist)
 
@@ -132,7 +132,7 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
         #lynch
         lynched = sample(playerlist,1)[0]
         playerlist.remove(lynched)
-        print("Player {} was lynched.".format(lynched.id))
+        print("Player {} ({} {}) was lynched.".format(lynched.id,lynched.alignment,lynched.role))
 
         playerlist = cultcheck(playerlist)
     #    print_playerlist(playerlist)
@@ -157,16 +157,10 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                         player_j.healed = True
                         print("Player {} healed is set to {} tonight.".format(player_j.id,player_j.healed))
 
-#mafia select who to kill
-        if getPlayersByAlignment(playerlist,"mafia") != []:
-            target = sample(getPlayersByNotAlignment(playerlist,"mafia"),1)[0] #select a random townie
-            if target.bp_status != True and target.healed != True:
-                playerlist.remove(player)
-                print("Player {} was killed by the mafia.".format(player.id))
-            if target.bp_status == True or target.healed == True:
-                print("Mafia kill BLOCKED.")
-
+#KILLS
+        attacked_players = []
 #vig kill(s)
+
         for player in playerlist:
             if player.role == "vig" and player.shots > 0:
                 player.shots =-1
@@ -175,12 +169,13 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                     if candidate.id != player.id:
                         candidates.append(candidate)
                 target = sample(candidates,1)[0]
+                attacked_players.append([target,"vig (player {})".format(player.id)])
                 #kill target if not bp
-                if target.bp_status == False and target.healed == False:
-                    playerlist.remove(target)
-                    print("Player {} was killed by a vig.".format(player.id))
-                else:
-                    print("Vig kill BLOCKED.")
+
+#mafia select who to kill
+        if getPlayersByAlignment(playerlist,"mafia") != []:
+            target = sample(getPlayersByNotAlignment(playerlist,"mafia"),1)[0] #select a random non-mafioso
+            attacked_players.append([target,"mafia"])
 #sk kill
         for player in playerlist:
             if player.role == "sk":
@@ -189,13 +184,33 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
                     if candidate.id != player.id:
                         candidates.append(candidate)
                 target = sample(candidates,1)[0]
-            #kill target
-                if target.bp_status == False and target.healed == False:
-                    playerlist.remove(target)
-                    print("Player {} was killed by an sk.".format(player.id))
-                else:
-                    print("Sk kill BLOCKED.")
+                attacked_players.append([target,"sk (player {})".format(player.id)])
+
+#process kills.
+        for attacked in attacked_players:
+            print("Player {} attacked by {}".format(attacked[0].id,attacked[1]))
+            if(attacked[0].healed):
+                print("Attacked failed - healed")
+                for player in playerlist:
+                    if player.id == attacked[0].id:
+                        player.healed = False
+            elif(attacked[0].bp!=0):
+                print("Attack failed - player had {} vests".format(attacked[0].bp))
+                for player in playerlist:
+                    if player.id == attacked[0].id:
+                        player.bp =- 1
+            else:
+                try:
+                    playerlist.remove(attacked[0])
+                    print("Kill succeeded.")
+                except:
+                    print("Kill processed - player already dead")
+
+
+
+
         playerlist = cultcheck(playerlist)
+
     #recruits
         for player in playerlist:
             if player.role == "cult leader":
@@ -209,7 +224,7 @@ def playGame(total_players, total_doctors, total_vigs, total_mafia,total_cult,to
         for player in playerlist:
             player.healed = False
 
-def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,total_sk): #run a batch of games under identical conditions, and print the statistics
+def run_batch(total_players=3,total_doctors=0,total_vigs=0,total_mafia=1,total_cult=0,total_sk=0): #run a batch of games under identical conditions, and print the statistics
     alignments = []
     results = []
     for i in range(1,5001):
@@ -238,8 +253,9 @@ def run_batch(total_players,total_doctors,total_vigs,total_mafia,total_cult,tota
     for result in results:
         s = s+result.length
     print("Average game length: {} cycles".format(s/len(results)))
-    return(m_win_perc)
+    return(1)
     #printHistogram(25,results)
+#playGame(11,1,2,1,0,0)
 run_batch(8,0,0,2,0,0)
 """xvals = []
 yvals = []
