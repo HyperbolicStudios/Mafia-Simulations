@@ -102,10 +102,14 @@ async def on_message(message):
         #if(senderNotMod(message)):
 
             #Medium communication
-            if(message.channel.id == medium_channel.id):
-                await dead_channel.send("**Medium:** " + message.content)
-            if(message.channel.id == dead_channel.id):
-                await medium_channel.send("**{}**: {}".format(message.author,message.content))
+            if(message.channel.name == "medium"):
+                for channel in message.guild.channels:
+                    if channel.name == "dead-chat-unspoiled":
+                        await channel.send("**Medium:** " + message.content)
+            if(message.channel.name == "dead-chat-unspoiled"):
+                for channel in message.guild.channels:
+                    if channel.name == "medium":
+                        await channel.send("**{}**: {}".format(message.author,message.content))
             """
             #Chess player communication
             if(message.channel.id == chess_champion_channel.id):
